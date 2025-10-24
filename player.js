@@ -1,4 +1,4 @@
-/* Heaven's Radio • Player Logic (v1.5.x) */
+/* Heaven's Radio • Player Logic (bind-to-DOM mode) */
 (function(){
   const CFG = Object.assign({
     poolsUrl: "",
@@ -7,117 +7,52 @@
     skipsPerHour: 3
   }, (window.HR_CONFIG||{}));
 
-  const root = document.getElementById('hr-root');
-  if (!root) { console.error('[HR] Missing #hr-root'); return; }
+  // Grab existing elements created in index.html
+  const audio      = byId('hr-audio');
+  const playBtn    = byId('hr-playBtn');
+  const playIcon   = byId('hr-playIcon');
+  const nextBtn    = byId('hr-nextBtn');
+  const stopBtn    = byId('hr-stopBtn');
+  const artistText = byId('hr-artistText');
+  const trackText  = byId('hr-trackText');
+  const stampText  = byId('hr-stampText');
+  const notice     = byId('hr-skipNotice');
+  const onAir      = byId('hr-onAir');
+  const likeBtn    = byId('hr-likeBtn');
 
-  // UI template: added 10px timeline bar between title and controls
-  root.innerHTML = `
-    <div class="hr-wrap">
-      <div class="hr-player" id="hr-player">
-        <div class="hr-titleCard" id="hr-titleCard">
-          <div class="hr-onair" id="hr-onAir"><span class="hr-onair-dot"></span><span>ON AIR</span></div>
-          <button class="hr-likeCorner hr-unliked" id="hr-likeBtn" title="Like">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3l-5.4 3.3 1.6-6.1-4.7-3.9 6.2-.5L12 4l2.3 6.1 6.2.5-4.7 3.9 1.6 6.1z" stroke-width="2"/></svg>
-          </button>
-          <div class="hr-artist" id="hr-artistText">HEAVEN'S RADIO</div>
-          <div class="hr-track"  id="hr-trackText">Ready when you are</div>
-          <div class="hr-stamp"  id="hr-stampText">0:00 • 0:00</div>
-        </div>
+  const ringElapsed = q('.hr-elapsed');
+  const ringRemain  = q('.hr-remain');
+  const ringSvg     = byId('hr-ringSvg');
+  const ringMarker  = byId('hr-ringMarker');
 
-        <!-- Timeline bar -->
-        <div class="hr-timeline" id="hr-timeline" aria-label="Seek">
-          <div class="hr-tl-track"></div>
-          <div class="hr-tl-fill" id="hr-tl-fill"></div>
-          <div class="hr-tl-thumb" id="hr-tl-thumb"></div>
-        </div>
+  // 10px timeline elements
+  const tl      = byId('hr-timeline');
+  const tlFill  = byId('hr-tl-fill');
+  const tlThumb = byId('hr-tl-thumb');
 
-        <div class="hr-cluster">
-          <div style="display:flex; justify-content:flex-end;">
-            <button class="hr-sq" id="hr-stopBtn" title="Stop">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" ry="2"/></svg>
-            </button>
-          </div>
-
-          <button class="hr-big" id="hr-playBtn" aria-label="Play">
-            <div class="hr-ring" aria-hidden="true">
-              <svg id="hr-ringSvg" viewBox="0 0 120 120">
-                <defs>
-                  <linearGradient id="hr-swirlGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%"   stop-color="#6cf"/>
-                    <stop offset="20%"  stop-color="#7fffd4"/>
-                    <stop offset="40%"  stop-color="#f9f871"/>
-                    <stop offset="60%"  stop-color="#ffa3e0"/>
-                    <stop offset="80%"  stop-color="#9ad0ff"/>
-                    <stop offset="100%" stop-color="#6cf"/>
-                    <animateTransform attributeName="gradientTransform" type="rotate" from="0 60 60" to="360 60 60" dur="6s" repeatCount="indefinite"/>
-                  </linearGradient>
-                </defs>
-                <circle class="hr-glassEdge" cx="60" cy="60" r="52"></circle>
-                <circle class="hr-remain"    cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="0"></circle>
-                <circle class="hr-elapsed"   cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="327"></circle>
-              </svg>
-              <div class="hr-marker" id="hr-ringMarker"></div>
-            </div>
-            <div class="hr-icon" id="hr-playIcon">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-            </div>
-          </button>
-
-          <div style="display:flex; justify-content:flex-start;">
-            <button class="hr-sq" id="hr-nextBtn" title="Next">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 6l7 6-7 6V6zm9 0h2v12h-2z"/></svg>
-            </button>
-          </div>
-        </div>
-
-        <div class="hr-notice" id="hr-skipNotice">YOU MAY ONLY SKIP THREE SONGS PER HOUR. PLEASE WAIT.</div>
-
-        <audio id="hr-audio"></audio>
-      </div>
-    </div>
-  `;
-
-  /* DOM */
-  const audio = id('hr-audio');
-  const playBtn = id('hr-playBtn');
-  const playIcon = id('hr-playIcon');
-  const nextBtn = id('hr-nextBtn');
-  const stopBtn = id('hr-stopBtn');
-  const artistText = id('hr-artistText');
-  const trackText  = id('hr-trackText');
-  const stampText = id('hr-stampText');
-  const notice = id('hr-skipNotice');
-  const onAir = id('hr-onAir');
-  const likeBtn = id('hr-likeBtn');
-
-  const ringElapsed = qs('.hr-elapsed');
-  const ringRemain  = qs('.hr-remain');
-  const ringSvg = id('hr-ringSvg');
-  const ringMarker = id('hr-ringMarker');
-
-  // NEW timeline elements
-  const tl = id('hr-timeline');
-  const tlFill = id('hr-tl-fill');
-  const tlThumb = id('hr-tl-thumb');
+  if (!audio || !playBtn) {
+    console.error('[HR] Missing required DOM elements. Check index.html IDs.');
+    return;
+  }
 
   /* State */
   let pools = {1:[],2:[],3:[]}, bags = {1:[],2:[],3:[]};
   let playCount = 0, current = null;
   let isPlaying = false, isPaused = false;
   const R = 52, CIRC = 2*Math.PI*R;
-  ringElapsed.setAttribute('stroke-dasharray', CIRC);
-  ringRemain.setAttribute('stroke-dasharray', CIRC);
-  ringElapsed.setAttribute('stroke-dashoffset', CIRC);
-  ringRemain.setAttribute('stroke-dashoffset', 0);
+  ringElapsed?.setAttribute('stroke-dasharray', CIRC);
+  ringRemain?.setAttribute('stroke-dasharray', CIRC);
+  ringElapsed?.setAttribute('stroke-dashoffset', CIRC);
+  ringRemain?.setAttribute('stroke-dashoffset', 0);
 
   /* Likes */
   let likes = loadLikes();
   function isLiked(t){ return !!likes[t?.url]; }
   function setLikeUI(liked){
-    likeBtn.classList.toggle('hr-liked', liked);
-    likeBtn.classList.toggle('hr-unliked', !liked);
+    likeBtn?.classList.toggle('hr-liked', liked);
+    likeBtn?.classList.toggle('hr-unliked', !liked);
   }
-  likeBtn.addEventListener('click', () => {
+  likeBtn?.addEventListener('click', () => {
     if (!current) return;
     const liked = !isLiked(current);
     if (liked) likes[current.url] = true; else delete likes[current.url];
@@ -126,11 +61,10 @@
   });
 
   /* Helpers */
-  function id(s){ return document.getElementById(s); }
-  function qs(s){ return root.querySelector(s); }
+  function byId(id){ return document.getElementById(id); }
+  function q(sel){ return document.querySelector(sel); }
   function fmt(s){ return (!isFinite(s)||s<0) ? "0:00" : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 
-  // Split "Artist - Song" → two lines; no dash shown in UI
   function splitTitle(full){
     const at = (full||"").split(' - ');
     if (at.length >= 2){
@@ -157,7 +91,7 @@
   }
 
   function setDocTitle(t){ document.title = t ? `${t} — Heaven's Radio` : "Heaven's Radio"; }
-  function showNotice(){ notice.classList.add('hr-show'); setTimeout(()=>notice.classList.remove('hr-show'), 10000); }
+  function showNotice(){ notice?.classList.add('hr-show'); setTimeout(()=>notice?.classList.remove('hr-show'), 10000); }
 
   function canSkip(){
     const k='hr_skip_times', now=Date.now(), hourAgo=now-3600_000;
@@ -198,14 +132,15 @@
   }
 
   function updateMarkerFraction(f){
+    if (!ringSvg) return;
     const w = ringSvg.getBoundingClientRect().width;
     const radiusPx = (w * (52/120));
     const angleDeg = -90 + f*360;
     ringMarker.style.transform = `translate(-50%,-50%) rotate(${angleDeg}deg) translate(${radiusPx}px)`;
   }
 
-  // NEW: update 10px timeline bar
   function updateTimeline(cur, dur){
+    if (!tlFill || !tlThumb) return;
     const pct = dur ? (cur/dur)*100 : 0;
     tlFill.style.width = pct + '%';
     tlThumb.style.left = pct + '%';
@@ -214,21 +149,21 @@
   async function loadAndPlay(item){
     current=item; audio.src=item.url;
     const parts = splitTitle(item.title);
-    artistText.textContent = parts.artist || '';
-    trackText.textContent  = parts.track  || item.title || "Heaven's Radio";
+    if (artistText) artistText.textContent = parts.artist || '';
+    if (trackText)  trackText.textContent  = parts.track  || item.title || "Heaven's Radio";
     setDocTitle(item.title);
 
     const onAirNow = (item.pool===3);
-    onAir.style.display = onAirNow ? 'inline-flex' : 'none';
+    if (onAir) onAir.style.display = onAirNow ? 'inline-flex' : 'none';
     setLikeUI(isLiked(item));
 
-    ringElapsed.setAttribute('stroke-dashoffset', CIRC);
-    stampText.textContent='0:00 • 0:00';
+    ringElapsed?.setAttribute('stroke-dashoffset', CIRC);
+    if (stampText) stampText.textContent='0:00 • 0:00';
     updateMarkerFraction(0);
     updateTimeline(0, audio.duration||0);
 
-    // Burst shooting stars when ON AIR starts
-    if (onAirNow) shootingStarBurst(10);
+    // Optional: burst stars when ON AIR starts (if you implemented stars)
+    // shootingStarBurst && onAirNow && shootingStarBurst(10);
 
     setPlayVisual(true,false);
     try{ await audio.play(); isPlaying=true; isPaused=false; }catch{ setPlayVisual(false,false); }
@@ -247,16 +182,16 @@
     }
   });
 
-  stopBtn.addEventListener('click', () => {
+  stopBtn?.addEventListener('click', () => {
     if (!current) return;
     audio.pause(); audio.currentTime=0; isPlaying=false; isPaused=false; setPlayVisual(false,false);
-    ringElapsed.setAttribute('stroke-dashoffset', CIRC);
+    ringElapsed?.setAttribute('stroke-dashoffset', CIRC);
     updateMarkerFraction(0);
     updateTimeline(0, audio.duration||0);
-    stampText.textContent=`0:00 • ${fmt(audio.duration||0)}`;
+    if (stampText) stampText.textContent=`0:00 • ${fmt(audio.duration||0)}`;
   });
 
-  nextBtn.addEventListener('click', async () => {
+  nextBtn?.addEventListener('click', async () => {
     if (!canSkip()) { showNotice(); return; }
     const p=choosePool(), n=pickFromBag(p); if (!n) { showNotice(); return; }
     playCount++; await loadAndPlay(n);
@@ -268,16 +203,16 @@
   });
 
   audio.addEventListener('loadedmetadata', ()=>{
-    stampText.textContent = `0:00 • ${fmt(audio.duration||0)}`;
+    if (stampText) stampText.textContent = `0:00 • ${fmt(audio.duration||0)}`;
     updateTimeline(0, audio.duration||0);
   });
 
   audio.addEventListener('timeupdate', () => {
     const d=audio.duration||0, c=audio.currentTime||0, f=d?c/d:0;
-    ringElapsed.setAttribute('stroke-dashoffset', (1-f)*CIRC);
+    ringElapsed?.setAttribute('stroke-dashoffset', (1-f)*CIRC);
     updateMarkerFraction(f);
     updateTimeline(c, d);
-    stampText.textContent = `${fmt(c)} • ${fmt(d)}`;
+    if (stampText) stampText.textContent = `${fmt(c)} • ${fmt(d)}`;
   });
 
   /* Init */
@@ -302,62 +237,7 @@ Pool #3: Link Airtime`;
       2: pools[2].slice().sort(()=>Math.random()-0.5),
       3: pools[3].slice().sort(()=>Math.random()-0.5)
     };
-
-    // Start periodic shooting stars
-    startShootingStarInterval();
   })();
-
-  /* Shooting stars — interval & bursts */
-  function startShootingStarInterval(){
-    // Every 12–18s, send a star across with a soft tail
-    setInterval(()=> shootingStar(), 12000 + Math.random()*6000);
-  }
-  function shootingStar(){
-    const w = window.innerWidth, h = window.innerHeight;
-    const startX = Math.random() < 0.5 ? -80 : w + 80;     // left or right offscreen
-    const endX   = startX < 0 ? w + 120 : -120;
-    const startY = Math.random() * (h * 0.5);
-    const angle  = startX < 0 ? 15 + Math.random()*20 : -195 - Math.random()*20;
-
-    const head = document.createElement('div');
-    head.className = 'hr-star';
-    head.style.left = startX + 'px';
-    head.style.top  = startY + 'px';
-    head.style.width = head.style.height = (4 + Math.random()*3) + 'px';
-    head.style.background = 'radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 40%, rgba(255,255,255,0) 70%)';
-    head.style.borderRadius = '50%';
-    head.style.filter = 'drop-shadow(0 0 8px rgba(255,255,255,.9))';
-
-    const tail = document.createElement('div');
-    tail.className = 'hr-star-tail';
-    tail.style.left = startX + 'px';
-    tail.style.top  = startY + 'px';
-    tail.style.width = '160px';
-    tail.style.height = '2px';
-    tail.style.background = 'linear-gradient(90deg, rgba(255,255,255,.8), rgba(255,255,255,0))';
-    tail.style.transformOrigin = 'left center';
-    tail.style.transform = `rotate(${angle}deg)`;
-    tail.style.opacity = .9;
-
-    document.body.appendChild(tail);
-    document.body.appendChild(head);
-
-    const dur = 1200 + Math.random()*600;
-    const headAnim = head.animate([
-      { transform:`translate(0,0)`, opacity:1 },
-      { transform:`translate(${endX-startX}px, ${(Math.random()*200-100)}px)`, opacity:0 }
-    ], { duration: dur, easing:'ease-out' });
-    const tailAnim = tail.animate([
-      { transform:`rotate(${angle}deg) translate(0,0)`, opacity:.9 },
-      { transform:`rotate(${angle}deg) translate(${endX-startX}px, ${(Math.random()*200-100)}px)`, opacity:0 }
-    ], { duration: dur, easing:'ease-out' });
-
-    headAnim.onfinish = ()=> head.remove();
-    tailAnim.onfinish = ()=> tail.remove();
-  }
-  function shootingStarBurst(n=8){
-    for(let i=0;i<n;i++) setTimeout(shootingStar, i*80);
-  }
 
   /* Storage */
   function loadLikes(){ try{ return JSON.parse(localStorage.getItem('hr_likes')||'{}'); }catch{ return {}; } }
