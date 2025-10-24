@@ -20,7 +20,7 @@
           <button class="hr-likeCorner hr-unliked" id="hr-likeBtn" title="Like">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3l-5.4 3.3 1.6-6.1-4.7-3.9 6.2-.5L12 4l2.3 6.1 6.2.5-4.7 3.9 1.6 6.1z" stroke-width="2"/></svg>
           </button>
-          <div class="hr-artist" id="hr-artistText">Heaven's Radio –</div>
+          <div class="hr-artist" id="hr-artistText">HEAVEN'S RADIO –</div>
           <div class="hr-track"  id="hr-trackText">Ready when you are</div>
           <div class="hr-stamp"  id="hr-stampText">0:00 • 0:00</div>
         </div>
@@ -35,6 +35,19 @@
           <button class="hr-big" id="hr-playBtn" aria-label="Play">
             <div class="hr-ring" aria-hidden="true">
               <svg id="hr-ringSvg" viewBox="0 0 120 120">
+                <defs>
+                  <linearGradient id="hr-swirlGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%"   stop-color="#6cf"/>
+                    <stop offset="20%"  stop-color="#7fffd4"/>
+                    <stop offset="40%"  stop-color="#f9f871"/>
+                    <stop offset="60%"  stop-color="#ffa3e0"/>
+                    <stop offset="80%"  stop-color="#9ad0ff"/>
+                    <stop offset="100%" stop-color="#6cf"/>
+                    <animateTransform attributeName="gradientTransform"
+                                      type="rotate" from="0 60 60" to="360 60 60"
+                                      dur="6s" repeatCount="indefinite"/>
+                  </linearGradient>
+                </defs>
                 <circle class="hr-glassEdge" cx="60" cy="60" r="52"></circle>
                 <circle class="hr-remain"    cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="0"></circle>
                 <circle class="hr-elapsed"   cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="327"></circle>
@@ -108,8 +121,8 @@
   function fmt(s){ return (!isFinite(s)||s<0) ? "0:00" : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
   function splitTitle(full){
     const m = full?.split(' - ');
-    if (m && m.length >= 2) return { artist: m[0]+" –", track: m.slice(1).join(' - ') };
-    return { artist: '', track: full||'Heaven\'s Radio' };
+    if (m && m.length >= 2) return { artist: (m[0] + " –").toUpperCase(), track: m.slice(1).join(' - ') };
+    return { artist: '', track: full||"Heaven's Radio" };
   }
   function parsePools(txt){
     const out={1:[],2:[],3:[]}; let cur=null;
@@ -232,7 +245,6 @@
       if(!r.ok) throw 0;
       text = await r.text();
     }catch{
-      // minimal inline fallback
       text = `Pool #1: Radio Blurbs
 
 Pool #2: Pulse List
@@ -251,16 +263,3 @@ Pool #3: Link Airtime`;
   function loadLikes(){ try{ return JSON.parse(localStorage.getItem('hr_likes')||'{}'); }catch{ return {}; } }
   function saveLikes(map){ localStorage.setItem('hr_likes', JSON.stringify(map)); }
 })();
-
-// ====== JS hook for the animated fill width & thumb position ======
-/* Call this on timeupdate:
-   updateProgress(currentTime, duration)
-*/
-function updateProgress(currentTime, duration) {
-  const pct = duration ? (currentTime / duration) * 100 : 0;
-  const fill = document.getElementById('progressFill');
-  const thumb = document.getElementById('progressThumb');
-  if (fill)  fill.style.width  = `${pct}%`;
-  if (thumb) thumb.style.left  = `${pct}%`;
-}
-
