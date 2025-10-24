@@ -251,3 +251,16 @@ Pool #3: Link Airtime`;
   function loadLikes(){ try{ return JSON.parse(localStorage.getItem('hr_likes')||'{}'); }catch{ return {}; } }
   function saveLikes(map){ localStorage.setItem('hr_likes', JSON.stringify(map)); }
 })();
+
+// ====== JS hook for the animated fill width & thumb position ======
+/* Call this on timeupdate:
+   updateProgress(currentTime, duration)
+*/
+function updateProgress(currentTime, duration) {
+  const pct = duration ? (currentTime / duration) * 100 : 0;
+  const fill = document.getElementById('progressFill');
+  const thumb = document.getElementById('progressThumb');
+  if (fill)  fill.style.width  = `${pct}%`;
+  if (thumb) thumb.style.left  = `${pct}%`;
+}
+
