@@ -1,15 +1,13 @@
-/* Heaven's Radio – player.css */
+/* Heaven's Radio • UI Styles (v1.5+) */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
 
 :root{
   --white:#fff;
-  --gray:#666;                 /* legacy token; not used on play now */
-  --neon:#38D6FF;              /* optional glow accent */
-  --peach:#FFC6A1;             /* peach marker glow */
-  --remain:transparent;        /* transparent empty ring */
+  --neon:#38D6FF;
+  --peach:#FFC6A1;
+  --remain:transparent;
   --maxw:720px;
 
-  /* glass tokens */
   --glass1: rgba(255,255,255,.18);
   --glass2: rgba(255,255,255,.06);
   --glassB: rgba(255,255,255,.38);
@@ -17,23 +15,23 @@
   --btnShadow: 0 10px 28px rgba(0,0,0,.28);
   --starFill:#FFD54A;
 
-  /* ring thickness (HALF) */
-  --ringW: 4;
+  --ringW: 4; /* thin progress ring */
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ height:100%; }
 body{ margin:0; background:transparent; font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-button{ -webkit-appearance:none; appearance:none; border:none; background:transparent; font:inherit; color:inherit; padding:0; cursor:pointer; }
+button{ appearance:none; border:none; background:transparent; font:inherit; color:inherit; padding:0; cursor:pointer; }
 
 .hr-wrap{ min-height:100dvh; display:grid; place-items:center; padding:28px 18px; }
-.hr-player{ width:min(94vw,var(--maxw)); display:grid; justify-items:center; gap:16px; position:relative; }
+.hr-player{ width:min(94vw,var(--maxw)); display:grid; justify-items:center; gap:18px; position:relative; }
 
-/* Title card with star in corner */
+/* Title card */
 .hr-titleCard{
   position:relative; z-index:1;
   max-width:min(94vw, 880px);
-  padding:18px 56px 16px; /* room for star on right */
+  width:clamp(320px, 62vw, 640px); /* fixed-feel but responsive */
+  padding:22px 56px 18px;
   border-radius:18px;
   background:linear-gradient(140deg,var(--glass1),var(--glass2));
   border:1px solid var(--glassB);
@@ -41,17 +39,21 @@ button{ -webkit-appearance:none; appearance:none; border:none; background:transp
   -webkit-backdrop-filter: blur(10px) saturate(130%);
   color:#fff; text-align:center;
   box-shadow: inset 0 1px 0 var(--glassHi);
+  margin-bottom: 22px; /* larger space before play button */
 }
+
+/* ON AIR badge (inside title box, centered at top) */
 .hr-onair{
-  position:absolute; left:50%; transform:translateX(-50%); top:6px;
+  position:absolute; left:50%; transform:translateX(-50%); top:8px;
   display:none; align-items:center; gap:8px;
-  background:linear-gradient(140deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
-  border:1px solid rgba(255,255,255,.35); border-radius:999px;
+  background:linear-gradient(140deg, rgba(255,255,255,.18), rgba(255,255,255,.06));
+  border:1px solid rgba(255,255,255,.45); border-radius:999px;
   padding:4px 10px; font-size:12px; letter-spacing:.06em; color:#fff;
 }
 .hr-onair-dot{ width:10px; height:10px; border-radius:50%; background:#ff3b30; box-shadow:0 0 12px rgba(255,59,48,.9); animation:hr-pulse 1.4s ease-in-out infinite; }
 @keyframes hr-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,59,48,.0) } 50%{ box-shadow:0 0 12px 3px rgba(255,59,48,.7) } }
 
+/* Corner like */
 .hr-likeCorner{
   position:absolute; right:10px; top:10px; width:36px; height:36px; border-radius:50%;
   display:grid; place-items:center;
@@ -63,45 +65,56 @@ button{ -webkit-appearance:none; appearance:none; border:none; background:transp
 .hr-liked svg{ fill:var(--starFill); stroke:var(--starFill); }
 .hr-unliked svg{ fill:none; stroke:#fff; }
 
-/* Title split */
+/* Two-line title */
 .hr-artist{
-  font-size:16px; text-transform:uppercase; letter-spacing:.08em;
-  font-weight:300; opacity:.95;
+  font-size:14px;
+  text-transform:uppercase;
+  letter-spacing:.5pt;       /* requested tracking */
+  font-weight:700;           /* bold */
+  opacity:.95;
+  line-height:1.1;
 }
 .hr-track{
-  font-size:26px; font-weight:300; line-height:1.15; /* thin, not bold */
+  font-size:26px;
+  font-weight:400;           /* thin-normal */
+  line-height:1.15;
+  margin-top:6px;
 }
-.hr-stamp{ font-size:14px; opacity:.95; margin-top:6px; }
+.hr-stamp{ font-size:14px; opacity:.95; margin-top:8px; }
 
 /* Controls row */
 .hr-cluster{
   display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:min(7vw,48px); width:100%;
-  z-index:1; margin-top:6px;
+  z-index:1;
 }
 
-/* Rounded-square side buttons; tighter look via bigger icon + more rounding */
+/* Side buttons: tighter padding, rounder corners, angled shine */
 .hr-sq{
   width:clamp(72px,12vw,96px);
   height:clamp(72px,12vw,96px);
-  border-radius:26px;
+  border-radius:28px; /* more rounded */
   display:grid; place-items:center;
   background:linear-gradient(160deg,var(--glass1),var(--glass2));
   border:1px solid var(--glassB);
   box-shadow: inset 0 1px 0 var(--glassHi), var(--btnShadow);
   backdrop-filter: blur(9px) saturate(135%);
   -webkit-backdrop-filter: blur(9px) saturate(135%);
-  transition: transform .15s ease;
   position:relative;
-}
-.hr-sq::before{
-  content:""; position:absolute; inset:0; border-radius:inherit;
-  background:linear-gradient(to bottom,rgba(255,255,255,.55),rgba(255,255,255,0) 40%);
-  pointer-events:none; mix-blend-mode:screen; opacity:.6;
+  transition: transform .15s ease;
 }
 .hr-sq:hover{ transform:translateY(-1px); }
+
+/* Angled shine border + face */
+.hr-sq::before{
+  content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+  background:
+    linear-gradient(35deg, rgba(255,255,255,.65), rgba(255,255,255,0) 45%),
+    linear-gradient(215deg, rgba(255,255,255,.22), rgba(255,255,255,0) 55%);
+  mix-blend-mode:screen; opacity:.8;
+}
 .hr-sq svg{ width:clamp(28px,6vw,34px); height:clamp(28px,6vw,34px); fill:#fff; }
 
-/* Play = transparent glass with WHITE icon */
+/* Play = transparent glass w/ white icon */
 .hr-big{
   position:relative;
   width:clamp(96px,18vw,144px);
@@ -117,8 +130,8 @@ button{ -webkit-appearance:none; appearance:none; border:none; background:transp
 .hr-big:hover{ transform:translateY(-1px); }
 .hr-icon svg{ width:clamp(52px,10vw,70px); height:clamp(52px,10vw,70px); fill:#fff; }
 
-/* Progress ring (half thickness) with multicolor stroke + subtle peach marker */
-.hr-ring{ position:absolute; inset:-10px; display:grid; place-items:center; pointer-events:none; }
+/* Thin progress ring hugs the edge; multicolor stroke + peach lead */
+.hr-ring{ position:absolute; inset:-1px; display:grid; place-items:center; pointer-events:none; }
 .hr-ring svg{ width:120%; height:120%; transform:rotate(-90deg); }
 .hr-glassEdge{ stroke:rgba(255,255,255,.22); stroke-width:var(--ringW); fill:none; }
 .hr-remain{    stroke:var(--remain);           stroke-width:var(--ringW); fill:none; }
@@ -129,14 +142,23 @@ button{ -webkit-appearance:none; appearance:none; border:none; background:transp
   width:clamp(7px,1.4vw,9px); height:clamp(7px,1.4vw,9px);
   background:var(--peach); border-radius:50%;
   box-shadow:0 0 8px 2px rgba(255,198,161,.6), 0 0 14px 4px rgba(255,198,161,.28);
-  opacity:.7;
-  transform: translate(-50%,-50%);
+  opacity:.7; transform: translate(-50%,-50%);
 }
 
-/* Skip-limit notice */
+/* Pause rainbow pulse (inside play button, not the ring) */
+.hr-big.hr-paused::after{
+  content:""; position:absolute; inset:8%; border-radius:50%;
+  background: conic-gradient(from 0deg,
+      #6cf, #7fffd4, #f9f871, #ffa3e0, #9ad0ff, #6cf);
+  filter: blur(6px) saturate(120%);
+  animation: hr-rainbow 2.4s linear infinite;
+  opacity:.40;
+}
+@keyframes hr-rainbow{ to { transform: rotate(360deg); } }
+
+/* Notice */
 .hr-notice{ margin-top:6px; text-align:center; color:#fff; font-size:11px; letter-spacing:.06em; font-weight:700; opacity:0; transition:opacity .25s ease; }
 .hr-notice.hr-show{ opacity:1; }
 
-@media (max-width:420px){
-  .hr-titleCard{ padding:14px 52px 14px; }
-}
+/* Responsive */
+@media (max-width:420px){ .hr-titleCard{ padding:18px 52px 18px; } }
