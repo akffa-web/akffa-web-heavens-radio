@@ -1,162 +1,142 @@
-/* ====== PLAYER STYLE UPDATES ====== */
+/* Heaven's Radio – player.css */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
 
-/* 1) Timeline thickness: half height */
-:root {
-  --timeline-height: 4px; /* was ~8px */
-  --timeline-radius: 999px;
-  --glass-bg: rgba(255,255,255,0.08);
-  --glass-stroke: rgba(255,255,255,0.25);
-  --peach: #ffb197; /* existing peach light */
+:root{
+  --white:#fff;
+  --gray:#666;                 /* legacy token; not used on play now */
+  --neon:#38D6FF;              /* optional glow accent */
+  --peach:#FFC6A1;             /* peach marker glow */
+  --remain:transparent;        /* transparent empty ring */
+  --maxw:720px;
+
+  /* glass tokens */
+  --glass1: rgba(255,255,255,.18);
+  --glass2: rgba(255,255,255,.06);
+  --glassB: rgba(255,255,255,.38);
+  --glassHi:rgba(255,255,255,.65);
+  --btnShadow: 0 10px 28px rgba(0,0,0,.28);
+  --starFill:#FFD54A;
+
+  /* ring thickness (HALF) */
+  --ringW: 4;
 }
 
-/* Timeline container */
-.progress {
-  position: relative;
-  width: 100%;
-  height: var(--timeline-height);
-}
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{ margin:0; background:transparent; font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
+button{ -webkit-appearance:none; appearance:none; border:none; background:transparent; font:inherit; color:inherit; padding:0; cursor:pointer; }
 
-/* Track (thin) */
-.progress__track {
-  position: absolute;
-  inset: 0;
-  background: rgba(255,255,255,0.15);
-  border-radius: var(--timeline-radius);
-  overflow: hidden;
-}
+.hr-wrap{ min-height:100dvh; display:grid; place-items:center; padding:28px 18px; }
+.hr-player{ width:min(94vw,var(--maxw)); display:grid; justify-items:center; gap:16px; position:relative; }
 
-/* 2) Multicolor swirling fill INSIDE the thin bar */
-.progress__fill {
-  position: absolute;
-  inset: 0;
-  width: 0%;                /* JS will set this based on currentTime/duration */
-  background: linear-gradient(
-    90deg,
-    #6cf 0%,
-    #7fffd4 20%,
-    #f9f871 40%,
-    #ffa3e0 60%,
-    #9ad0ff 80%,
-    #6cf 100%
-  );
-  background-size: 300% 100%;
-  animation: progressSwirl 6s linear infinite;
-  border-radius: var(--timeline-radius);
-  will-change: width, background-position;
+/* Title card with star in corner */
+.hr-titleCard{
+  position:relative; z-index:1;
+  max-width:min(94vw, 880px);
+  padding:18px 56px 16px; /* room for star on right */
+  border-radius:18px;
+  background:linear-gradient(140deg,var(--glass1),var(--glass2));
+  border:1px solid var(--glassB);
+  backdrop-filter: blur(10px) saturate(130%);
+  -webkit-backdrop-filter: blur(10px) saturate(130%);
+  color:#fff; text-align:center;
+  box-shadow: inset 0 1px 0 var(--glassHi);
 }
-
-@keyframes progressSwirl {
-  0%   { background-position:   0% 0; }
-  100% { background-position: 300% 0; }
+.hr-onair{
+  position:absolute; left:50%; transform:translateX(-50%); top:6px;
+  display:none; align-items:center; gap:8px;
+  background:linear-gradient(140deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
+  border:1px solid rgba(255,255,255,.35); border-radius:999px;
+  padding:4px 10px; font-size:12px; letter-spacing:.06em; color:#fff;
 }
+.hr-onair-dot{ width:10px; height:10px; border-radius:50%; background:#ff3b30; box-shadow:0 0 12px rgba(255,59,48,.9); animation:hr-pulse 1.4s ease-in-out infinite; }
+@keyframes hr-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,59,48,.0) } 50%{ box-shadow:0 0 12px 3px rgba(255,59,48,.7) } }
 
-/* 3) Peach light indicator more subtle */
-.progress__thumb {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: var(--peach);
-  opacity: 0.35;                     /* more subtle */
-  box-shadow:
-    0 0 0 2px rgba(255,177,151,0.18),
-    0 4px 12px rgba(255,177,151,0.20); /* softer glow */
-  pointer-events: none;
-}
-
-/* 4) Title area typography (Montserrat for both) */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
-
-.titlebox {
-  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  display: flex;
-  align-items: baseline;
-  gap: .5rem;
-  /* uniform width that “sticks” but is responsive */
-  width: clamp(260px, 40vw, 580px);
-  min-height: 2.6rem; /* keeps layout stable if text wraps */
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-/* Artist (before the dash) – all caps, ~16px, thin */
-.titlebox .artist {
-  font-size: 16px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-weight: 300; /* thin */
-  opacity: 0.9;
-}
-
-/* Separator dash – keep subtle */
-.titlebox .sep {
-  opacity: 0.5;
-  font-weight: 300;
-}
-
-/* Song title (after the dash) – ~26px, not bold, thin */
-.titlebox .song {
-  font-size: 26px;
-  font-weight: 300; /* thin */
-  line-height: 1.1;
-}
-
-/* 5) Larger gap between title box and play button */
-.player-header {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem; /* increase as needed */
-}
-.player-header .titlebox {
-  margin-right: .75rem; /* extra breathing room */
-}
-
-/* 6) Play button: transparent glass with white icon */
-.btn {
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  padding: .6rem .8rem;
-  transition: all .2s ease;
-}
-
-/* Play */
-.btn--play {
-  background: var(--glass-bg);
-  color: #fff; /* icon color */
-  border-color: var(--glass-stroke);
+.hr-likeCorner{
+  position:absolute; right:10px; top:10px; width:36px; height:36px; border-radius:50%;
+  display:grid; place-items:center;
+  border:1px solid rgba(255,255,255,.45);
+  background:linear-gradient(140deg,var(--glass1),var(--glass2));
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06),
-              0 4px 14px rgba(0,0,0,0.25);
 }
-.btn--play:hover {
-  background: rgba(255,255,255,0.12);
-  transform: translateY(-1px);
+.hr-likeCorner svg{ width:20px; height:20px; }
+.hr-liked svg{ fill:var(--starFill); stroke:var(--starFill); }
+.hr-unliked svg{ fill:none; stroke:#fff; }
+
+/* Title split */
+.hr-artist{
+  font-size:16px; text-transform:uppercase; letter-spacing:.08em;
+  font-weight:300; opacity:.95;
+}
+.hr-track{
+  font-size:26px; font-weight:300; line-height:1.15; /* thin, not bold */
+}
+.hr-stamp{ font-size:14px; opacity:.95; margin-top:6px; }
+
+/* Controls row */
+.hr-cluster{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:min(7vw,48px); width:100%;
+  z-index:1; margin-top:6px;
 }
 
-/* 7) Stop/Skip buttons: less inner padding & more rounded */
-.btn--skip, .btn--stop {
-  padding: .4rem .56rem;         /* reduced padding */
-  border-radius: 9999px;         /* more rounded */
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.18);
+/* Rounded-square side buttons; tighter look via bigger icon + more rounding */
+.hr-sq{
+  width:clamp(72px,12vw,96px);
+  height:clamp(72px,12vw,96px);
+  border-radius:26px;
+  display:grid; place-items:center;
+  background:linear-gradient(160deg,var(--glass1),var(--glass2));
+  border:1px solid var(--glassB);
+  box-shadow: inset 0 1px 0 var(--glassHi), var(--btnShadow);
+  backdrop-filter: blur(9px) saturate(135%);
+  -webkit-backdrop-filter: blur(9px) saturate(135%);
+  transition: transform .15s ease;
+  position:relative;
 }
-.btn--skip:hover, .btn--stop:hover {
-  background: rgba(255,255,255,0.10);
+.hr-sq::before{
+  content:""; position:absolute; inset:0; border-radius:inherit;
+  background:linear-gradient(to bottom,rgba(255,255,255,.55),rgba(255,255,255,0) 40%);
+  pointer-events:none; mix-blend-mode:screen; opacity:.6;
+}
+.hr-sq:hover{ transform:translateY(-1px); }
+.hr-sq svg{ width:clamp(28px,6vw,34px); height:clamp(28px,6vw,34px); fill:#fff; }
+
+/* Play = transparent glass with WHITE icon */
+.hr-big{
+  position:relative;
+  width:clamp(96px,18vw,144px);
+  aspect-ratio:1; border-radius:50%;
+  display:grid; place-items:center;
+  background:linear-gradient(160deg,var(--glass1),var(--glass2));
+  border:1px solid var(--glassB);
+  backdrop-filter: blur(9px) saturate(135%);
+  -webkit-backdrop-filter: blur(9px) saturate(135%);
+  box-shadow: inset 0 1px 0 var(--glassHi), 0 12px 32px rgba(0,0,0,.28);
+  transition: transform .15s ease;
+}
+.hr-big:hover{ transform:translateY(-1px); }
+.hr-icon svg{ width:clamp(52px,10vw,70px); height:clamp(52px,10vw,70px); fill:#fff; }
+
+/* Progress ring (half thickness) with multicolor stroke + subtle peach marker */
+.hr-ring{ position:absolute; inset:-10px; display:grid; place-items:center; pointer-events:none; }
+.hr-ring svg{ width:120%; height:120%; transform:rotate(-90deg); }
+.hr-glassEdge{ stroke:rgba(255,255,255,.22); stroke-width:var(--ringW); fill:none; }
+.hr-remain{    stroke:var(--remain);           stroke-width:var(--ringW); fill:none; }
+.hr-elapsed{   stroke:url(#hr-swirlGrad);      stroke-width:var(--ringW); fill:none; stroke-linecap:round;
+               filter: drop-shadow(0 0 6px rgba(56,214,255,.45)); }
+.hr-marker{
+  position:absolute; left:50%; top:50%;
+  width:clamp(7px,1.4vw,9px); height:clamp(7px,1.4vw,9px);
+  background:var(--peach); border-radius:50%;
+  box-shadow:0 0 8px 2px rgba(255,198,161,.6), 0 0 14px 4px rgba(255,198,161,.28);
+  opacity:.7;
+  transform: translate(-50%,-50%);
 }
 
-/* Optional: ensure icon sizes look balanced with reduced padding */
-.btn svg {
-  width: 18px;
-  height: 18px;
-}
-.btn--play svg {
-  width: 22px;
-  height: 22px;
+/* Skip-limit notice */
+.hr-notice{ margin-top:6px; text-align:center; color:#fff; font-size:11px; letter-spacing:.06em; font-weight:700; opacity:0; transition:opacity .25s ease; }
+.hr-notice.hr-show{ opacity:1; }
+
+@media (max-width:420px){
+  .hr-titleCard{ padding:14px 52px 14px; }
 }
