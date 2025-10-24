@@ -1,4 +1,4 @@
-/* Heaven's Radio • UI Styles (v1.5+) */
+/* Heaven's Radio • UI Styles (v1.5.x) */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
 
 :root{
@@ -15,7 +15,7 @@
   --btnShadow: 0 10px 28px rgba(0,0,0,.28);
   --starFill:#FFD54A;
 
-  --ringW: 4; /* thin progress ring */
+  --ringW: 4; /* thin edge ring (kept) */
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
@@ -30,7 +30,7 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
 .hr-titleCard{
   position:relative; z-index:1;
   max-width:min(94vw, 880px);
-  width:clamp(320px, 62vw, 640px); /* fixed-feel but responsive */
+  width:clamp(320px, 62vw, 640px);
   padding:22px 56px 18px;
   border-radius:18px;
   background:linear-gradient(140deg,var(--glass1),var(--glass2));
@@ -39,10 +39,9 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
   -webkit-backdrop-filter: blur(10px) saturate(130%);
   color:#fff; text-align:center;
   box-shadow: inset 0 1px 0 var(--glassHi);
-  margin-bottom: 22px; /* larger space before play button */
 }
 
-/* ON AIR badge (inside title box, centered at top) */
+/* ON AIR badge */
 .hr-onair{
   position:absolute; left:50%; transform:translateX(-50%); top:8px;
   display:none; align-items:center; gap:8px;
@@ -67,44 +66,62 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
 
 /* Two-line title */
 .hr-artist{
-  font-size:14px;
-  text-transform:uppercase;
-  letter-spacing:.5pt;       /* requested tracking */
-  font-weight:700;           /* bold */
-  opacity:.95;
-  line-height:1.1;
+  font-size:14px; text-transform:uppercase; letter-spacing:.5pt;
+  font-weight:700; opacity:.95; line-height:1.1; margin-top:6px;
 }
 .hr-track{
-  font-size:26px;
-  font-weight:400;           /* thin-normal */
-  line-height:1.15;
-  margin-top:6px;
+  font-size:26px; font-weight:400; line-height:1.15; margin-top:6px;
 }
 .hr-stamp{ font-size:14px; opacity:.95; margin-top:8px; }
 
-/* Controls row */
-.hr-cluster{
-  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:min(7vw,48px); width:100%;
-  z-index:1;
+/* NEW: 10px timeline bar (between title and play) */
+.hr-timeline{
+  width:clamp(320px, 62vw, 640px);
+  height:10px; position:relative; border-radius:999px;
+  margin-top:18px; /* small space under title */
+  overflow:hidden; backdrop-filter: blur(6px);
+  border:1px solid rgba(255,255,255,.28);
+  background:linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+}
+.hr-tl-track{
+  position:absolute; inset:0; opacity:.25;
+  background:linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,.08));
+}
+.hr-tl-fill{
+  position:absolute; left:0; top:0; height:100%; width:0%;
+  background:linear-gradient(90deg,#6cf, #7fffd4, #f9f871, #ffa3e0, #9ad0ff, #6cf);
+  background-size:300% 100%;
+  animation:hr-swirl 6s linear infinite;
+}
+@keyframes hr-swirl{ 0%{background-position:0% 0} 100%{background-position:300% 0} }
+.hr-tl-thumb{
+  position:absolute; top:50%; transform:translate(-50%,-50%);
+  width:14px; height:14px; border-radius:50%;
+  background:var(--peach);
+  box-shadow:0 0 8px 2px rgba(255,198,161,.55), 0 0 16px 4px rgba(255,198,161,.25);
+  left:0%;
 }
 
-/* Side buttons: tighter padding, rounder corners, angled shine */
+/* Controls row — push the play button a couple lines lower */
+.hr-cluster{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:min(7vw,48px); width:100%;
+  z-index:1; margin-top:40px; /* was ~0–10px, now lower */
+}
+
+/* Side buttons (polished) */
 .hr-sq{
   width:clamp(72px,12vw,96px);
   height:clamp(72px,12vw,96px);
-  border-radius:28px; /* more rounded */
+  border-radius:28px;
   display:grid; place-items:center;
   background:linear-gradient(160deg,var(--glass1),var(--glass2));
   border:1px solid var(--glassB);
   box-shadow: inset 0 1px 0 var(--glassHi), var(--btnShadow);
   backdrop-filter: blur(9px) saturate(135%);
   -webkit-backdrop-filter: blur(9px) saturate(135%);
-  position:relative;
-  transition: transform .15s ease;
+  position:relative; transition: transform .15s ease;
 }
 .hr-sq:hover{ transform:translateY(-1px); }
-
-/* Angled shine border + face */
 .hr-sq::before{
   content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
   background:
@@ -114,7 +131,7 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
 }
 .hr-sq svg{ width:clamp(28px,6vw,34px); height:clamp(28px,6vw,34px); fill:#fff; }
 
-/* Play = transparent glass w/ white icon */
+/* Play = transparent glass with white icon */
 .hr-big{
   position:relative;
   width:clamp(96px,18vw,144px);
@@ -130,7 +147,7 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
 .hr-big:hover{ transform:translateY(-1px); }
 .hr-icon svg{ width:clamp(52px,10vw,70px); height:clamp(52px,10vw,70px); fill:#fff; }
 
-/* Thin progress ring hugs the edge; multicolor stroke + peach lead */
+/* Thin edge ring (kept for aesthetic) */
 .hr-ring{ position:absolute; inset:-1px; display:grid; place-items:center; pointer-events:none; }
 .hr-ring svg{ width:120%; height:120%; transform:rotate(-90deg); }
 .hr-glassEdge{ stroke:rgba(255,255,255,.22); stroke-width:var(--ringW); fill:none; }
@@ -141,24 +158,26 @@ button{ appearance:none; border:none; background:transparent; font:inherit; colo
   position:absolute; left:50%; top:50%;
   width:clamp(7px,1.4vw,9px); height:clamp(7px,1.4vw,9px);
   background:var(--peach); border-radius:50%;
-  box-shadow:0 0 8px 2px rgba(255,198,161,.6), 0 0 14px 4px rgba(255,198,161,.28);
+  box-shadow:0 0 8px 2px rgba(255,198,151,.6), 0 0 14px 4px rgba(255,198,151,.28);
   opacity:.7; transform: translate(-50%,-50%);
 }
 
-/* Pause rainbow pulse (inside play button, not the ring) */
+/* Pause rainbow pulse (inside button) */
 .hr-big.hr-paused::after{
   content:""; position:absolute; inset:8%; border-radius:50%;
-  background: conic-gradient(from 0deg,
-      #6cf, #7fffd4, #f9f871, #ffa3e0, #9ad0ff, #6cf);
+  background: conic-gradient(from 0deg, #6cf, #7fffd4, #f9f871, #ffa3e0, #9ad0ff, #6cf);
   filter: blur(6px) saturate(120%);
-  animation: hr-rainbow 2.4s linear infinite;
-  opacity:.40;
+  animation: hr-rainbow 2.4s linear infinite; opacity:.40;
 }
 @keyframes hr-rainbow{ to { transform: rotate(360deg); } }
 
-/* Notice */
+/* Shooting star bits (JS creates elements; these are base styles) */
+.hr-star, .hr-star-tail{
+  position:fixed; pointer-events:none; z-index:9999;
+  will-change: transform, opacity;
+}
+
 .hr-notice{ margin-top:6px; text-align:center; color:#fff; font-size:11px; letter-spacing:.06em; font-weight:700; opacity:0; transition:opacity .25s ease; }
 .hr-notice.hr-show{ opacity:1; }
 
-/* Responsive */
 @media (max-width:420px){ .hr-titleCard{ padding:18px 52px 18px; } }
