@@ -1,6 +1,4 @@
-/* Heaven's Radio – player.js */
-// Mounts into #hr-root and reads window.HR_CONFIG
-
+/* Heaven's Radio • Player Logic (v1.5+) */
 (function(){
   const CFG = Object.assign({
     poolsUrl: "",
@@ -20,7 +18,7 @@
           <button class="hr-likeCorner hr-unliked" id="hr-likeBtn" title="Like">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17.3l-5.4 3.3 1.6-6.1-4.7-3.9 6.2-.5L12 4l2.3 6.1 6.2.5-4.7 3.9 1.6 6.1z" stroke-width="2"/></svg>
           </button>
-          <div class="hr-artist" id="hr-artistText">HEAVEN'S RADIO –</div>
+          <div class="hr-artist" id="hr-artistText">HEAVEN'S RADIO</div>
           <div class="hr-track"  id="hr-trackText">Ready when you are</div>
           <div class="hr-stamp"  id="hr-stampText">0:00 • 0:00</div>
         </div>
@@ -36,6 +34,7 @@
             <div class="hr-ring" aria-hidden="true">
               <svg id="hr-ringSvg" viewBox="0 0 120 120">
                 <defs>
+                  <!-- Multicolor swirl stroke -->
                   <linearGradient id="hr-swirlGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
                     <stop offset="0%"   stop-color="#6cf"/>
                     <stop offset="20%"  stop-color="#7fffd4"/>
@@ -43,9 +42,7 @@
                     <stop offset="60%"  stop-color="#ffa3e0"/>
                     <stop offset="80%"  stop-color="#9ad0ff"/>
                     <stop offset="100%" stop-color="#6cf"/>
-                    <animateTransform attributeName="gradientTransform"
-                                      type="rotate" from="0 60 60" to="360 60 60"
-                                      dur="6s" repeatCount="indefinite"/>
+                    <animateTransform attributeName="gradientTransform" type="rotate" from="0 60 60" to="360 60 60" dur="6s" repeatCount="indefinite"/>
                   </linearGradient>
                 </defs>
                 <circle class="hr-glassEdge" cx="60" cy="60" r="52"></circle>
@@ -73,7 +70,7 @@
     </div>
   `;
 
-  /* DOM refs */
+  /* DOM */
   const audio = id('hr-audio');
   const playBtn = id('hr-playBtn');
   const playIcon = id('hr-playIcon');
@@ -115,15 +112,21 @@
     setLikeUI(liked);
   });
 
-  /* Utils */
+  /* Helpers */
   function id(s){ return document.getElementById(s); }
   function qs(s){ return root.querySelector(s); }
   function fmt(s){ return (!isFinite(s)||s<0) ? "0:00" : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
+
+  // Split "Artist - Song" → two lines. If no dash, artist = "", track = full title.
   function splitTitle(full){
-    const m = full?.split(' - ');
-    if (m && m.length >= 2) return { artist: (m[0] + " –").toUpperCase(), track: m.slice(1).join(' - ') };
+    const at = (full||"").split(' - ');
+    if (at.length >= 2){
+      return { artist: at[0].toUpperCase(), track: at.slice(1).join(' - ') };
+    }
     return { artist: '', track: full||"Heaven's Radio" };
   }
+
+  // Pools parser
   function parsePools(txt){
     const out={1:[],2:[],3:[]}; let cur=null;
     for (const raw of txt.split(/\r?\n/)) {
@@ -140,8 +143,10 @@
     }
     return out;
   }
+
   function setDocTitle(t){ document.title = t ? `${t} — Heaven's Radio` : "Heaven's Radio"; }
   function showNotice(){ notice.classList.add('hr-show'); setTimeout(()=>notice.classList.remove('hr-show'), 10000); }
+
   function canSkip(){
     const k='hr_skip_times', now=Date.now(), hourAgo=now-3600_000;
     let arr=[]; try{arr=JSON.parse(localStorage.getItem(k)||'[]')}catch{}
@@ -149,6 +154,7 @@
     if (arr.length >= (CFG.skipsPerHour||3)) return false;
     arr.push(now); localStorage.setItem(k, JSON.stringify(arr)); return true;
   }
+
   function pickFromBag(p){
     if (!bags[p].length) {
       bags[p] = pools[p].slice().sort(()=>Math.random()-0.5);
@@ -158,6 +164,7 @@
     }
     return bags[p].shift();
   }
+
   function choosePool(){
     const nextIndex = playCount + 1;
     const dueIntro = (nextIndex % (CFG.introEvery||6) === 0);
@@ -166,7 +173,10 @@
     if (dueIntro && pools[1].length) return 1;
     return 2;
   }
+
   function setPlayVisual(playing, paused){
+    const btn = playBtn;
+    btn.classList.toggle('hr-paused', !!paused);
     if (playing && !paused) {
       playIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
     } else if (paused) {
@@ -175,6 +185,7 @@
       playIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
     }
   }
+
   function updateMarkerFraction(f){
     const w = ringSvg.getBoundingClientRect().width;
     const radiusPx = (w * (52/120));
@@ -205,8 +216,11 @@
       const p=choosePool(); const n=pickFromBag(p); if (!n) return;
       playCount++; await loadAndPlay(n); return;
     }
-    if (isPlaying && !audio.paused) { audio.pause(); isPlaying=false; isPaused=true; setPlayVisual(false,true); }
-    else { try{ await audio.play(); isPlaying=true; isPaused=false; setPlayVisual(true,false); }catch{} }
+    if (isPlaying && !audio.paused) {
+      audio.pause(); isPlaying=false; isPaused=true; setPlayVisual(false,true);
+    } else {
+      try{ await audio.play(); isPlaying=true; isPaused=false; setPlayVisual(true,false); }catch{}
+    }
   });
 
   stopBtn.addEventListener('click', () => {
@@ -259,7 +273,42 @@ Pool #3: Link Airtime`;
     };
   })();
 
-  /* Storage helpers */
+  /* Star trail around play button */
+  (function(){
+    const area = playBtn;
+    let last = 0;
+    function spawnStar(x, y, burst=false){
+      const s = document.createElement('span');
+      const size = burst ? (8 + Math.random()*10) : (5 + Math.random()*6);
+      s.style.position='fixed';
+      s.style.left = (x - size/2) + 'px';
+      s.style.top  = (y - size/2) + 'px';
+      s.style.width = s.style.height = size + 'px';
+      s.style.pointerEvents='none';
+      s.style.zIndex=1000;
+      s.style.background='radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 40%, rgba(255,255,255,0) 70%)';
+      s.style.borderRadius='50%';
+      s.style.filter='drop-shadow(0 0 6px rgba(255,255,255,.85))';
+      document.body.appendChild(s);
+      const dx = (Math.random()*2-1)*24;
+      const dy = (Math.random()*2-1)*24;
+      s.animate([
+        { transform:'translate(0,0) scale(1)', opacity:1 },
+        { transform:`translate(${dx}px,${dy}px) scale(.6)`, opacity:0 }
+      ], { duration: 700 + Math.random()*400, easing:'ease-out' }).onfinish = ()=> s.remove();
+    }
+    area.addEventListener('mousemove', (e)=>{
+      const now = performance.now();
+      if (now - last < 55) return; /* throttle */
+      last = now;
+      spawnStar(e.clientX, e.clientY, false);
+    });
+    area.addEventListener('click', (e)=>{
+      for (let i=0;i<8;i++) spawnStar(e.clientX, e.clientY, true);
+    });
+  })();
+
+  /* Storage */
   function loadLikes(){ try{ return JSON.parse(localStorage.getItem('hr_likes')||'{}'); }catch{ return {}; } }
   function saveLikes(map){ localStorage.setItem('hr_likes', JSON.stringify(map)); }
 })();
