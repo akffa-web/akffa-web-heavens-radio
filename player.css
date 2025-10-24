@@ -1,132 +1,47 @@
-/* Heaven's Radio – player.css */
-/* Font */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
-
-:root{
-  --white:#fff;
-  --gray:#666;                 /* darker play icon */
-  --neon:#38D6FF;             /* neon sky blue for elapsed */
-  --peach:#FFC6A1;            /* peach marker glow */
-  --remain:transparent;       /* transparent empty ring */
-  --maxw:720px;
-
-  /* glass tokens */
-  --glass1: rgba(255,255,255,.18);
-  --glass2: rgba(255,255,255,.06);
-  --glassB: rgba(255,255,255,.38);
-  --glassHi:rgba(255,255,255,.65);
-  --btnShadow: 0 10px 28px rgba(0,0,0,.28);
-  --starFill:#FFD54A;
+/* ========== PROGRESS / TIMELAPSE BAR ========== */
+/* Make it half as thick; adjust the variable if you have one */
+:root {
+  --progress-height: 4px; /* was ~8px; set to half */
+  --progress-bg: rgba(255,255,255,0.12);
+  --progress-radius: 999px;
 }
 
-*,*::before,*::after{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{ margin:0; background:transparent; font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif; }
-button{ -webkit-appearance:none; appearance:none; border:none; background:transparent; font:inherit; color:inherit; padding:0; cursor:pointer; }
-
-.hr-wrap{ min-height:100dvh; display:grid; place-items:center; padding:28px 18px; }
-.hr-player{ width:min(94vw,var(--maxw)); display:grid; justify-items:center; gap:16px; position:relative; }
-
-/* Title card with star in corner */
-.hr-titleCard{
-  position:relative; z-index:1;
-  max-width:min(94vw, 880px);
-  padding:18px 56px 16px; /* room for star on right */
-  border-radius:18px;
-  background:linear-gradient(140deg,var(--glass1),var(--glass2));
-  border:1px solid var(--glassB);
-  backdrop-filter: blur(10px) saturate(130%);
-  -webkit-backdrop-filter: blur(10px) saturate(130%);
-  color:#fff; text-align:center;
-  box-shadow: inset 0 1px 0 var(--glassHi);
-}
-.hr-onair{
-  position:absolute; left:50%; transform:translateX(-50%); top:6px;
-  display:none; align-items:center; gap:8px;
-  background:linear-gradient(140deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
-  border:1px solid rgba(255,255,255,.35); border-radius:999px;
-  padding:4px 10px; font-size:12px; letter-spacing:.06em; color:#fff;
-}
-.hr-onair-dot{ width:10px; height:10px; border-radius:50%; background:#ff3b30; box-shadow:0 0 12px rgba(255,59,48,.9); animation:hr-pulse 1.4s ease-in-out infinite; }
-@keyframes hr-pulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,59,48,.0) } 50%{ box-shadow:0 0 12px 3px rgba(255,59,48,.7) } }
-
-.hr-likeCorner{
-  position:absolute; right:10px; top:10px; width:36px; height:36px; border-radius:50%;
-  display:grid; place-items:center;
-  border:1px solid rgba(255,255,255,.45);
-  background:linear-gradient(140deg,var(--glass1),var(--glass2));
-  backdrop-filter: blur(8px);
-}
-.hr-likeCorner svg{ width:20px; height:20px; }
-.hr-liked svg{ fill:var(--starFill); stroke:var(--starFill); }
-.hr-unliked svg{ fill:none; stroke:#fff; }
-
-/* Title split */
-.hr-artist{ font-size:clamp(12px,2.4vw,16px); opacity:.9; }
-.hr-track{  font-size:clamp(20px,5.2vw,34px); font-weight:600; line-height:1.15; }
-.hr-stamp{  font-size:14px; opacity:.95; margin-top:6px; }
-
-/* Controls row */
-.hr-cluster{
-  display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:min(7vw,48px); width:100%;
-  z-index:1; margin-top:6px;
+/* Track */
+.player .progress-track {
+  position: relative;
+  height: var(--progress-height);
+  background: var(--progress-bg);
+  border-radius: var(--progress-radius);
+  overflow: hidden;
 }
 
-/* Rounded-square side buttons; white icons (responsive up to 30px) */
-.hr-sq{
-  width:clamp(72px,12vw,96px);
-  height:clamp(72px,12vw,96px);
-  border-radius:22px;
-  display:grid; place-items:center;
-  background:linear-gradient(160deg,var(--glass1),var(--glass2));
-  border:1px solid var(--glassB);
-  box-shadow: inset 0 1px 0 var(--glassHi), var(--btnShadow);
-  backdrop-filter: blur(9px) saturate(135%);
-  -webkit-backdrop-filter: blur(9px) saturate(135%);
-  transition: transform .15s ease;
-  position:relative;
-}
-.hr-sq::before{
-  content:""; position:absolute; inset:0; border-radius:inherit;
-  background:linear-gradient(to bottom,rgba(255,255,255,.55),rgba(255,255,255,0) 40%);
-  pointer-events:none; mix-blend-mode:screen; opacity:.6;
-}
-.hr-sq:hover{ transform:translateY(-1px); }
-.hr-sq svg{ width:clamp(24px,5vw,30px); height:clamp(24px,5vw,30px); fill:#fff; }
-
-/* Big play – smaller; white gradient; dark gray icon 70px (responsive) */
-.hr-big{
-  position:relative;
-  width:clamp(96px,18vw,144px);
-  aspect-ratio:1; border-radius:50%;
-  display:grid; place-items:center;
-  background: radial-gradient(140% 140% at 30% 20%, #fff, #f7f7f7);
-  border:1px solid rgba(0,0,0,.05);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.95), 0 12px 32px rgba(0,0,0,.28);
-  transition: transform .15s ease;
-}
-.hr-big:hover{ transform:translateY(-1px); }
-.hr-icon svg{ width:clamp(52px,10vw,70px); height:clamp(52px,10vw,70px); fill:var(--gray); }
-
-/* Progress ring: glass edge + transparent remainder + neon elapsed + peach marker */
-.hr-ring{ position:absolute; inset:-10px; display:grid; place-items:center; pointer-events:none; }
-.hr-ring svg{ width:120%; height:120%; transform:rotate(-90deg); }
-.hr-glassEdge{ stroke:rgba(255,255,255,.22); stroke-width:8; fill:none; }
-.hr-remain{    stroke:var(--remain);           stroke-width:8; fill:none; }
-.hr-elapsed{   stroke:var(--neon);             stroke-width:8; fill:none; stroke-linecap:round;
-               filter: drop-shadow(0 0 8px rgba(56,214,255,.6)); }
-.hr-marker{
-  position:absolute; left:50%; top:50%;
-  width:clamp(8px,1.6vw,12px); height:clamp(8px,1.6vw,12px);
-  background:var(--peach); border-radius:50%;
-  box-shadow:0 0 10px 2px rgba(255,198,161,.85), 0 0 20px 6px rgba(255,198,161,.35);
-  transform: translate(-50%,-50%);
+/* Swirling multicolor "fill" that also moves */
+.player .progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg,
+    #ff7eb3, #ff758c, #ffd86f, #89f7fe, #66a6ff, #a1ffce, #fbc2eb, #ff7eb3
+  );
+  background-size: 300% 100%;
+  animation: progressGradientShift 6s linear infinite;
+  border-radius: inherit;
 }
 
-/* Skip-limit notice */
-.hr-notice{ margin-top:6px; text-align:center; color:#fff; font-size:11px; letter-spacing:.06em; font-weight:700; opacity:0; transition:opacity .25s ease; }
-.hr-notice.hr-show{ opacity:1; }
-
-@media (max-width:420px){
-  .hr-titleCard{ padding:14px 52px 14px; }
+/* If you show a 'played' buffer as well, keep it subtle: */
+.player .progress-buffered {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: rgba(255,255,255,0.18);
+  border-radius: inherit;
 }
+
+@keyframes progressGradientShift {
+  0%   { background-position: 0% 50%;   filter: hue-rotate(0deg); }
+  50%  { background-position: 100% 50%; filter: hue-rotate(40deg); }
+  100% { background-position: 0% 50%;   filter: hue-rotate(0deg); }
+}
+
+/* ========== PEACH LIGHT INDICATOR (more subtle) ========== */
+/* If your indicator*
