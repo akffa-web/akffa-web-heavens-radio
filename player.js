@@ -1,4 +1,4 @@
-/* Heaven's Radio • Player Logic (v1.5+) */
+/* Heaven's Radio • Player Logic (v1.5.x) */
 (function(){
   const CFG = Object.assign({
     poolsUrl: "",
@@ -10,6 +10,7 @@
   const root = document.getElementById('hr-root');
   if (!root) { console.error('[HR] Missing #hr-root'); return; }
 
+  // UI template: added 10px timeline bar between title and controls
   root.innerHTML = `
     <div class="hr-wrap">
       <div class="hr-player" id="hr-player">
@@ -23,6 +24,13 @@
           <div class="hr-stamp"  id="hr-stampText">0:00 • 0:00</div>
         </div>
 
+        <!-- Timeline bar -->
+        <div class="hr-timeline" id="hr-timeline" aria-label="Seek">
+          <div class="hr-tl-track"></div>
+          <div class="hr-tl-fill" id="hr-tl-fill"></div>
+          <div class="hr-tl-thumb" id="hr-tl-thumb"></div>
+        </div>
+
         <div class="hr-cluster">
           <div style="display:flex; justify-content:flex-end;">
             <button class="hr-sq" id="hr-stopBtn" title="Stop">
@@ -34,7 +42,6 @@
             <div class="hr-ring" aria-hidden="true">
               <svg id="hr-ringSvg" viewBox="0 0 120 120">
                 <defs>
-                  <!-- Multicolor swirl stroke -->
                   <linearGradient id="hr-swirlGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
                     <stop offset="0%"   stop-color="#6cf"/>
                     <stop offset="20%"  stop-color="#7fffd4"/>
@@ -82,10 +89,16 @@
   const notice = id('hr-skipNotice');
   const onAir = id('hr-onAir');
   const likeBtn = id('hr-likeBtn');
+
   const ringElapsed = qs('.hr-elapsed');
   const ringRemain  = qs('.hr-remain');
   const ringSvg = id('hr-ringSvg');
   const ringMarker = id('hr-ringMarker');
+
+  // NEW timeline elements
+  const tl = id('hr-timeline');
+  const tlFill = id('hr-tl-fill');
+  const tlThumb = id('hr-tl-thumb');
 
   /* State */
   let pools = {1:[],2:[],3:[]}, bags = {1:[],2:[],3:[]};
@@ -117,7 +130,7 @@
   function qs(s){ return root.querySelector(s); }
   function fmt(s){ return (!isFinite(s)||s<0) ? "0:00" : `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 
-  // Split "Artist - Song" → two lines. If no dash, artist = "", track = full title.
+  // Split "Artist - Song" → two lines; no dash shown in UI
   function splitTitle(full){
     const at = (full||"").split(' - ');
     if (at.length >= 2){
@@ -126,7 +139,6 @@
     return { artist: '', track: full||"Heaven's Radio" };
   }
 
-  // Pools parser
   function parsePools(txt){
     const out={1:[],2:[],3:[]}; let cur=null;
     for (const raw of txt.split(/\r?\n/)) {
@@ -175,8 +187,7 @@
   }
 
   function setPlayVisual(playing, paused){
-    const btn = playBtn;
-    btn.classList.toggle('hr-paused', !!paused);
+    playBtn.classList.toggle('hr-paused', !!paused);
     if (playing && !paused) {
       playIcon.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
     } else if (paused) {
@@ -193,18 +204,31 @@
     ringMarker.style.transform = `translate(-50%,-50%) rotate(${angleDeg}deg) translate(${radiusPx}px)`;
   }
 
+  // NEW: update 10px timeline bar
+  function updateTimeline(cur, dur){
+    const pct = dur ? (cur/dur)*100 : 0;
+    tlFill.style.width = pct + '%';
+    tlThumb.style.left = pct + '%';
+  }
+
   async function loadAndPlay(item){
     current=item; audio.src=item.url;
     const parts = splitTitle(item.title);
     artistText.textContent = parts.artist || '';
     trackText.textContent  = parts.track  || item.title || "Heaven's Radio";
     setDocTitle(item.title);
-    onAir.style.display = (item.pool===3) ? 'inline-flex' : 'none';
+
+    const onAirNow = (item.pool===3);
+    onAir.style.display = onAirNow ? 'inline-flex' : 'none';
     setLikeUI(isLiked(item));
 
     ringElapsed.setAttribute('stroke-dashoffset', CIRC);
     stampText.textContent='0:00 • 0:00';
     updateMarkerFraction(0);
+    updateTimeline(0, audio.duration||0);
+
+    // Burst shooting stars when ON AIR starts
+    if (onAirNow) shootingStarBurst(10);
 
     setPlayVisual(true,false);
     try{ await audio.play(); isPlaying=true; isPaused=false; }catch{ setPlayVisual(false,false); }
@@ -228,6 +252,7 @@
     audio.pause(); audio.currentTime=0; isPlaying=false; isPaused=false; setPlayVisual(false,false);
     ringElapsed.setAttribute('stroke-dashoffset', CIRC);
     updateMarkerFraction(0);
+    updateTimeline(0, audio.duration||0);
     stampText.textContent=`0:00 • ${fmt(audio.duration||0)}`;
   });
 
@@ -242,10 +267,16 @@
     playCount++; await loadAndPlay(n);
   });
 
+  audio.addEventListener('loadedmetadata', ()=>{
+    stampText.textContent = `0:00 • ${fmt(audio.duration||0)}`;
+    updateTimeline(0, audio.duration||0);
+  });
+
   audio.addEventListener('timeupdate', () => {
     const d=audio.duration||0, c=audio.currentTime||0, f=d?c/d:0;
     ringElapsed.setAttribute('stroke-dashoffset', (1-f)*CIRC);
     updateMarkerFraction(f);
+    updateTimeline(c, d);
     stampText.textContent = `${fmt(c)} • ${fmt(d)}`;
   });
 
@@ -271,42 +302,62 @@ Pool #3: Link Airtime`;
       2: pools[2].slice().sort(()=>Math.random()-0.5),
       3: pools[3].slice().sort(()=>Math.random()-0.5)
     };
+
+    // Start periodic shooting stars
+    startShootingStarInterval();
   })();
 
-  /* Star trail around play button */
-  (function(){
-    const area = playBtn;
-    let last = 0;
-    function spawnStar(x, y, burst=false){
-      const s = document.createElement('span');
-      const size = burst ? (8 + Math.random()*10) : (5 + Math.random()*6);
-      s.style.position='fixed';
-      s.style.left = (x - size/2) + 'px';
-      s.style.top  = (y - size/2) + 'px';
-      s.style.width = s.style.height = size + 'px';
-      s.style.pointerEvents='none';
-      s.style.zIndex=1000;
-      s.style.background='radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 40%, rgba(255,255,255,0) 70%)';
-      s.style.borderRadius='50%';
-      s.style.filter='drop-shadow(0 0 6px rgba(255,255,255,.85))';
-      document.body.appendChild(s);
-      const dx = (Math.random()*2-1)*24;
-      const dy = (Math.random()*2-1)*24;
-      s.animate([
-        { transform:'translate(0,0) scale(1)', opacity:1 },
-        { transform:`translate(${dx}px,${dy}px) scale(.6)`, opacity:0 }
-      ], { duration: 700 + Math.random()*400, easing:'ease-out' }).onfinish = ()=> s.remove();
-    }
-    area.addEventListener('mousemove', (e)=>{
-      const now = performance.now();
-      if (now - last < 55) return; /* throttle */
-      last = now;
-      spawnStar(e.clientX, e.clientY, false);
-    });
-    area.addEventListener('click', (e)=>{
-      for (let i=0;i<8;i++) spawnStar(e.clientX, e.clientY, true);
-    });
-  })();
+  /* Shooting stars — interval & bursts */
+  function startShootingStarInterval(){
+    // Every 12–18s, send a star across with a soft tail
+    setInterval(()=> shootingStar(), 12000 + Math.random()*6000);
+  }
+  function shootingStar(){
+    const w = window.innerWidth, h = window.innerHeight;
+    const startX = Math.random() < 0.5 ? -80 : w + 80;     // left or right offscreen
+    const endX   = startX < 0 ? w + 120 : -120;
+    const startY = Math.random() * (h * 0.5);
+    const angle  = startX < 0 ? 15 + Math.random()*20 : -195 - Math.random()*20;
+
+    const head = document.createElement('div');
+    head.className = 'hr-star';
+    head.style.left = startX + 'px';
+    head.style.top  = startY + 'px';
+    head.style.width = head.style.height = (4 + Math.random()*3) + 'px';
+    head.style.background = 'radial-gradient(circle, rgba(255,255,255,.95) 0%, rgba(255,255,255,.6) 40%, rgba(255,255,255,0) 70%)';
+    head.style.borderRadius = '50%';
+    head.style.filter = 'drop-shadow(0 0 8px rgba(255,255,255,.9))';
+
+    const tail = document.createElement('div');
+    tail.className = 'hr-star-tail';
+    tail.style.left = startX + 'px';
+    tail.style.top  = startY + 'px';
+    tail.style.width = '160px';
+    tail.style.height = '2px';
+    tail.style.background = 'linear-gradient(90deg, rgba(255,255,255,.8), rgba(255,255,255,0))';
+    tail.style.transformOrigin = 'left center';
+    tail.style.transform = `rotate(${angle}deg)`;
+    tail.style.opacity = .9;
+
+    document.body.appendChild(tail);
+    document.body.appendChild(head);
+
+    const dur = 1200 + Math.random()*600;
+    const headAnim = head.animate([
+      { transform:`translate(0,0)`, opacity:1 },
+      { transform:`translate(${endX-startX}px, ${(Math.random()*200-100)}px)`, opacity:0 }
+    ], { duration: dur, easing:'ease-out' });
+    const tailAnim = tail.animate([
+      { transform:`rotate(${angle}deg) translate(0,0)`, opacity:.9 },
+      { transform:`rotate(${angle}deg) translate(${endX-startX}px, ${(Math.random()*200-100)}px)`, opacity:0 }
+    ], { duration: dur, easing:'ease-out' });
+
+    headAnim.onfinish = ()=> head.remove();
+    tailAnim.onfinish = ()=> tail.remove();
+  }
+  function shootingStarBurst(n=8){
+    for(let i=0;i<n;i++) setTimeout(shootingStar, i*80);
+  }
 
   /* Storage */
   function loadLikes(){ try{ return JSON.parse(localStorage.getItem('hr_likes')||'{}'); }catch{ return {}; } }
