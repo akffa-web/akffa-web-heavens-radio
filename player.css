@@ -1,47 +1,162 @@
-/* ========== PROGRESS / TIMELAPSE BAR ========== */
-/* Make it half as thick; adjust the variable if you have one */
+/* ====== PLAYER STYLE UPDATES ====== */
+
+/* 1) Timeline thickness: half height */
 :root {
-  --progress-height: 4px; /* was ~8px; set to half */
-  --progress-bg: rgba(255,255,255,0.12);
-  --progress-radius: 999px;
+  --timeline-height: 4px; /* was ~8px */
+  --timeline-radius: 999px;
+  --glass-bg: rgba(255,255,255,0.08);
+  --glass-stroke: rgba(255,255,255,0.25);
+  --peach: #ffb197; /* existing peach light */
 }
 
-/* Track */
-.player .progress-track {
+/* Timeline container */
+.progress {
   position: relative;
-  height: var(--progress-height);
-  background: var(--progress-bg);
-  border-radius: var(--progress-radius);
+  width: 100%;
+  height: var(--timeline-height);
+}
+
+/* Track (thin) */
+.progress__track {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: var(--timeline-radius);
   overflow: hidden;
 }
 
-/* Swirling multicolor "fill" that also moves */
-.player .progress-fill {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg,
-    #ff7eb3, #ff758c, #ffd86f, #89f7fe, #66a6ff, #a1ffce, #fbc2eb, #ff7eb3
+/* 2) Multicolor swirling fill INSIDE the thin bar */
+.progress__fill {
+  position: absolute;
+  inset: 0;
+  width: 0%;                /* JS will set this based on currentTime/duration */
+  background: linear-gradient(
+    90deg,
+    #6cf 0%,
+    #7fffd4 20%,
+    #f9f871 40%,
+    #ffa3e0 60%,
+    #9ad0ff 80%,
+    #6cf 100%
   );
   background-size: 300% 100%;
-  animation: progressGradientShift 6s linear infinite;
-  border-radius: inherit;
+  animation: progressSwirl 6s linear infinite;
+  border-radius: var(--timeline-radius);
+  will-change: width, background-position;
 }
 
-/* If you show a 'played' buffer as well, keep it subtle: */
-.player .progress-buffered {
+@keyframes progressSwirl {
+  0%   { background-position:   0% 0; }
+  100% { background-position: 300% 0; }
+}
+
+/* 3) Peach light indicator more subtle */
+.progress__thumb {
   position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  background: rgba(255,255,255,0.18);
-  border-radius: inherit;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--peach);
+  opacity: 0.35;                     /* more subtle */
+  box-shadow:
+    0 0 0 2px rgba(255,177,151,0.18),
+    0 4px 12px rgba(255,177,151,0.20); /* softer glow */
+  pointer-events: none;
 }
 
-@keyframes progressGradientShift {
-  0%   { background-position: 0% 50%;   filter: hue-rotate(0deg); }
-  50%  { background-position: 100% 50%; filter: hue-rotate(40deg); }
-  100% { background-position: 0% 50%;   filter: hue-rotate(0deg); }
+/* 4) Title area typography (Montserrat for both) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap');
+
+.titlebox {
+  font-family: 'Montserrat', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  display: flex;
+  align-items: baseline;
+  gap: .5rem;
+  /* uniform width that “sticks” but is responsive */
+  width: clamp(260px, 40vw, 580px);
+  min-height: 2.6rem; /* keeps layout stable if text wraps */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-/* ========== PEACH LIGHT INDICATOR (more subtle) ========== */
-/* If your indicator*
+/* Artist (before the dash) – all caps, ~16px, thin */
+.titlebox .artist {
+  font-size: 16px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 300; /* thin */
+  opacity: 0.9;
+}
+
+/* Separator dash – keep subtle */
+.titlebox .sep {
+  opacity: 0.5;
+  font-weight: 300;
+}
+
+/* Song title (after the dash) – ~26px, not bold, thin */
+.titlebox .song {
+  font-size: 26px;
+  font-weight: 300; /* thin */
+  line-height: 1.1;
+}
+
+/* 5) Larger gap between title box and play button */
+.player-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem; /* increase as needed */
+}
+.player-header .titlebox {
+  margin-right: .75rem; /* extra breathing room */
+}
+
+/* 6) Play button: transparent glass with white icon */
+.btn {
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: .6rem .8rem;
+  transition: all .2s ease;
+}
+
+/* Play */
+.btn--play {
+  background: var(--glass-bg);
+  color: #fff; /* icon color */
+  border-color: var(--glass-stroke);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06),
+              0 4px 14px rgba(0,0,0,0.25);
+}
+.btn--play:hover {
+  background: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+}
+
+/* 7) Stop/Skip buttons: less inner padding & more rounded */
+.btn--skip, .btn--stop {
+  padding: .4rem .56rem;         /* reduced padding */
+  border-radius: 9999px;         /* more rounded */
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.btn--skip:hover, .btn--stop:hover {
+  background: rgba(255,255,255,0.10);
+}
+
+/* Optional: ensure icon sizes look balanced with reduced padding */
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+.btn--play svg {
+  width: 22px;
+  height: 22px;
+}
